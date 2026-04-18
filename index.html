@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Westcord</title>
+    <meta name="description" content="A pixel-perfect Westcord experience built for community and real-time chat. Join servers, add friends, and chat instantly.">
+    <meta property="og:title" content="Westcord">
+    <meta property="og:description" content="Experience a fully functional Westcord clone with real-time messaging, server management, and a premium dark theme.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+</head>
+<body class="dark-theme">
+    
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h2>Welcome back!</h2>
+                <p>We're so excited to see you again!</p>
+            </div>
+            <form id="login-form" class="auth-form">
+                <div class="input-group">
+                    <label for="login-username">USERNAME <span class="required">*</span></label>
+                    <input type="text" id="login-username" required>
+                </div>
+                <div class="input-group">
+                    <label for="login-password">PASSWORD <span class="required">*</span></label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="auth-error" id="auth-error"></div>
+                <button type="submit" class="auth-btn" id="auth-submit-btn">Log In</button>
+                <div class="auth-links">
+                    <span class="need-account">Need an account?</span> <a href="#" id="toggle-auth-mode">Register</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Layout (Hidden until logged in) -->
+    <div id="app" class="app-layout hidden">
+        <!-- 1. Server Sidebar -->
+        <nav class="server-nav">
+            <div class="server-icon dm-icon active" id="btn-home" title="Direct Messages">
+                <svg width="28" height="20" viewBox="0 0 28 20"><path fill="currentColor" d="M23.0212 1.67671C21.3107 0.871196 19.4805 0.274179 17.5604 0C17.2479 0.566456 16.8954 1.30855 16.6441 1.91566C14.5901 1.60268 12.5463 1.60268 10.5117 1.91566C10.2604 1.30855 9.89782 0.566456 9.58535 0C7.65347 0.274179 5.82322 0.871196 4.11272 1.67671C0.660863 6.94577 -0.274401 12.0874 0.19825 17.1523C2.48447 18.8775 4.69345 19.9272 6.85501 20C7.4046 19.2319 7.89209 18.4063 8.3183 17.5348C7.5375 17.2323 6.79017 16.854 6.08833 16.4024C6.27627 16.2625 6.45892 16.1118 6.63629 15.9515C11.127 18.0772 16.027 18.0772 20.4719 15.9515C20.6492 16.1118 20.8319 16.2625 21.0198 16.4024C20.318 16.854 19.5706 17.2323 18.7898 17.5348C19.216 18.4063 19.7035 19.2319 20.2531 20C22.4146 19.9272 24.6235 18.8775 26.9098 17.1523C27.466 11.3142 25.9681 6.22014 23.0212 1.67671ZM9.68044 13.6383C8.36162 13.6383 7.28481 12.3995 7.28481 10.8872C7.28481 9.37503 8.33924 8.13622 9.68044 8.13622C11.0312 8.13622 12.108 9.37503 12.0744 10.8872C12.0744 12.3995 11.0201 13.6383 9.68044 13.6383ZM17.3732 13.6383C16.0544 13.6383 14.9776 12.3995 14.9776 10.8872C14.9776 9.37503 16.0321 8.13622 17.3732 8.13622C18.724 8.13622 19.8008 9.37503 19.7672 10.8872C19.7672 12.3995 18.7128 13.6383 17.3732 13.6383Z"/></svg>
+            </div>
+            <div class="sidebar-separator"></div>
+            
+            <div id="server-list-container" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                <!-- Dynamic servers will appear here -->
+            </div>
+
+            <div class="server-icon add-server" id="btn-open-add-server" title="Add a Server">
+                <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+            </div>
+        </nav>
+
+        <!-- 2. Channel/DM Sidebar -->
+        <aside class="channel-sidebar">
+            
+            <!-- DM View Header & Content -->
+            <div id="dm-view-sidebar">
+                <header class="sidebar-header search-header">
+                    <button class="find-btn" id="btn-open-add-friend" style="background-color: var(--success); color: white; text-align: center; font-weight: 600;">Add Friend</button>
+                </header>
+                <div class="sidebar-scroller" id="dm-list-container">
+                    <div style="padding: 10px; color: var(--text-muted); font-size: 13px; text-align: center;">Loading friends...</div>
+                </div>
+            </div>
+
+            <!-- Server View Header & Content -->
+            <div id="server-view-sidebar" class="hidden" style="position: relative;">
+                <header class="sidebar-header" id="server-header-btn">
+                    <h3 id="current-server-name">Main Server</h3>
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="currentColor" d="M4.5 7L9 11.5L13.5 7H4.5Z"/></svg>
+                </header>
+                
+                <div id="server-dropdown-menu" class="server-dropdown hidden">
+                    <div id="btn-leave-server" class="dropdown-item danger">
+                        Delete Server
+                    </div>
+                </div>
+
+                <div class="sidebar-scroller" id="server-channel-list">
+                    <!-- Dynamic categories and channels will appear here -->
+                </div>
+            </div>
+
+            <!-- User Panel -->
+            <div class="user-panel">
+                <div class="user-info">
+                    <div class="avatar online"></div>
+                    <div class="user-details">
+                        <span class="username" id="display-username">Guest User</span>
+                        <span class="user-id">#0001</span>
+                    </div>
+                </div>
+                <div class="user-controls">
+                    <svg id="btn-settings" width="20" height="20" viewBox="0 0 24 24" title="User Settings"><path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.21.07-.47-.12-.61l-2.01-1.58zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 3. Chat Main -->
+        <main class="chat-container">
+            <header class="chat-header">
+                <div class="chat-header-left" id="chat-header-info"></div>
+                <div class="chat-header-right" id="chat-header-invite"></div>
+            </header>
+            <div id="message-list" class="message-list">
+                <!-- Messages will be injected here -->
+            </div>
+            <form id="message-form" class="message-input-area hidden">
+                <div class="input-wrapper">
+                    <button type="button" class="attach-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                    </button>
+                    <input type="text" id="message-input" placeholder="Message..." autocomplete="off">
+                </div>
+            </form>
+        </main>
+
+        <!-- 4. Member Sidebar -->
+        <aside class="member-sidebar" id="member-sidebar" style="display: none;">
+            <!-- Dynamic members injected here -->
+        </aside>
+    </div>
+
+    <!-- Settings Overlay -->
+    <div id="settings-overlay" class="settings-overlay hidden">
+        <div class="settings-content">
+            <div class="settings-sidebar">
+                <div class="settings-sidebar-scroll">
+                    <div class="settings-header">USER SETTINGS</div>
+                    <div class="settings-tab active">My Account</div>
+                    <div class="settings-divider"></div>
+                    <!-- Logout Removed per LO's request -->
+                </div>
+            </div>
+            <div class="settings-main">
+                <div class="settings-main-inner">
+                    <h2>My Account</h2>
+                    <div class="account-card">
+                        <div class="account-card-header"></div>
+                        <div class="account-card-body">
+                            <input type="file" id="avatar-upload-input" accept="image/*" style="display: none;">
+                            <div id="settings-avatar-btn" class="account-card-avatar avatar online" style="width: 80px; height: 80px; cursor: pointer;" title="Click to upload avatar"></div>
+                            <div class="account-info">
+                                <h3 id="settings-username">Username</h3>
+                                <div class="account-field">
+                                    <div>
+                                        <h4>USERNAME</h4>
+                                        <p id="settings-username-display">Username#0001</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-close" id="btn-close-settings">
+                    <div class="close-btn-circle">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"/></svg>
+                    </div>
+                    <span>ESC</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Friend Modal -->
+    <div id="add-friend-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <h2 style="color: var(--text-header); margin-bottom: 8px;">Add Friend</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">You can add a friend with their exact Westcord Username.</p>
+            <div class="input-group">
+                <input type="text" id="add-friend-input" placeholder="Enter username here" style="background-color: var(--bg-input);">
+            </div>
+            <div class="auth-error" id="add-friend-error" style="margin-top:8px;"></div>
+            <div class="modal-buttons" style="margin-top: 24px; display:flex; justify-content:flex-end; gap:8px;">
+                <button class="discord-btn secondary" id="btn-cancel-friend">Cancel</button>
+                <button class="discord-btn" id="btn-submit-friend">Add Friend</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Server Modal -->
+    <div id="add-server-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="padding: 0;">
+            <div style="padding: 24px; text-align: center;">
+                <h2 style="color: var(--text-header); margin-bottom: 8px;">Add a Server</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Your server is where you and your friends hang out. Make yours and start talking.</p>
+                
+                <div class="server-options-tabs">
+                    <button id="tab-create-server" class="tab-btn active">Create My Own</button>
+                    <button id="tab-join-server" class="tab-btn">Join a Server</button>
+                </div>
+                
+                <div id="form-create-server">
+                    <div class="input-group" style="text-align: left; margin-bottom: 16px;">
+                        <label for="create-server-name">SERVER NAME</label>
+                        <input type="text" id="create-server-name" placeholder="My Awesome Server" style="background-color: var(--bg-input);">
+                    </div>
+                    <div class="auth-error" id="create-server-error"></div>
+                    <button class="discord-btn" id="btn-submit-create-server" style="width: 100%; margin-top: 8px;">Create</button>
+                </div>
+
+                <div id="form-join-server" class="hidden">
+                    <div class="input-group" style="text-align: left; margin-bottom: 16px;">
+                        <label for="join-server-code">INVITE LINK OR CODE</label>
+                        <input type="text" id="join-server-code" placeholder="e.g. Xy7R2p" style="background-color: var(--bg-input);">
+                    </div>
+                    <div class="auth-error" id="join-server-error"></div>
+                    <button class="discord-btn" id="btn-submit-join-server" style="width: 100%; margin-top: 8px;">Join Server</button>
+                </div>
+            </div>
+            <div style="background-color: var(--bg-channels); padding: 16px; border-radius: 0 0 4px 4px;">
+                 <button class="discord-btn secondary" id="btn-cancel-server" style="width: 100%;">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Channel Modal -->
+    <div id="add-channel-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="padding: 0;">
+            <div style="padding: 24px;">
+                <h2 style="color: var(--text-header); margin-bottom: 8px;">Create Channel</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 16px;">in Text Channels</p>
+                <div class="input-group">
+                    <label for="create-channel-name">CHANNEL NAME</label>
+                    <div style="display:flex; align-items:center; background-color: var(--bg-input); border-radius: 4px; padding: 0 8px;">
+                        <svg class="hash" width="20" height="20" viewBox="0 0 24 24" style="color:var(--text-muted)"><path fill="currentColor" d="M5.8863 21L6.5877 17H3L3.43836 14.4722H7.03425L7.82192 10H4.23425L4.6726 7.47222H8.26027L8.96164 3.47222H11.5479L10.8466 7.47222H15.2219L15.9233 3.47222H18.5096L17.8082 7.47222H21.3959L20.9575 10H17.3616L16.574 14.4722H20.1616L19.7233 17H16.1274L15.426 21H12.8397L13.5411 17H9.16575L8.46438 21H5.8863ZM9.60411 14.4722H14.0041L14.7918 10H10.3918L9.60411 14.4722Z"/></svg>
+                        <input type="text" id="create-channel-name" placeholder="new-channel" style="background-color: transparent; border:none; outline:none; box-shadow:none;">
+                    </div>
+                </div>
+            </div>
+            <div style="background-color: var(--bg-channels); padding: 16px; border-radius: 0 0 4px 4px; display:flex; justify-content:flex-end; gap:8px;">
+                 <button class="discord-btn secondary" id="btn-cancel-channel">Cancel</button>
+                 <button class="discord-btn" id="btn-submit-channel">Create Channel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Logic -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
