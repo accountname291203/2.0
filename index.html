@@ -8,7 +8,950 @@
     <meta property="og:title" content="Westcord">
     <meta property="og:description" content="Experience a fully functional Westcord clone with real-time messaging, server management, and a premium dark theme.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+:root {
+    --bg-servers: #1E1F22;
+    --bg-channels: #2B2D31;
+    --bg-chat: #313338;
+    --bg-members: #2B2D31;
+    --bg-user-panel: #232428;
+    --bg-input: #383A40;
+    --bg-modifier-hover: rgba(78, 80, 88, 0.3);
+    --bg-modifier-active: rgba(78, 80, 88, 0.6);
+    --bg-modifier-selected: rgba(78, 80, 88, 0.6);
+
+    --text-normal: #DBDEE1;
+    --text-muted: #949BA4;
+    --text-channels: #949BA4;
+    --text-header: #FFFFFF;
+    --text-danger: #FA777C;
+
+    --brand: #5865F2;
+    --brand-hover: #4752c4;
+    --success: #23a559;
+    --danger: #da373c;
+
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-chat);
+    color: var(--text-normal);
+    height: 100vh;
+    overflow: hidden;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ---------------- Auth Screen ---------------- */
+.auth-container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: url('https://discord.com/assets/1fa681f2167cba684dd3.png') center/cover no-repeat;
+    background-color: #5865F2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.auth-box {
+    background-color: var(--bg-chat);
+    padding: 32px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.auth-header h2 {
+    color: var(--text-header);
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.input-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.input-group label .required {
+    color: var(--danger);
+}
+
+.input-group input {
+    width: 100%;
+    background-color: var(--bg-servers);
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    color: var(--text-normal);
+    font-size: 16px;
+    outline: none;
+    font-family: var(--font-primary);
+}
+
+.input-group input:focus {
+    outline: 1px solid var(--brand);
+}
+
+.auth-btn {
+    background-color: var(--brand);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 8px;
+}
+
+.auth-btn:hover {
+    background-color: var(--brand-hover);
+}
+
+.auth-links {
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+.auth-links .need-account {
+    color: var(--text-muted);
+}
+
+.auth-links a {
+    color: #00A8FC;
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+.auth-error {
+    color: var(--danger);
+    font-size: 14px;
+    text-align: center;
+}
+
+/* ---------------- settings overlay ---------------- */
+.settings-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-chat);
+    display: flex;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.settings-content {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.settings-sidebar {
+    width: 35%;
+    display: flex;
+    justify-content: flex-end;
+    background-color: var(--bg-channels);
+}
+
+.settings-sidebar-scroll {
+    width: 218px;
+    padding: 60px 20px 60px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-header {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+}
+
+.settings-tab {
+    padding: 6px 10px;
+    color: var(--text-channels);
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.settings-tab:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-normal);
+}
+
+.settings-tab.active {
+    background-color: var(--bg-modifier-selected);
+    color: var(--text-header);
+}
+
+.settings-tab.danger {
+    color: var(--text-danger);
+}
+
+.settings-tab.danger:hover {
+    color: var(--text-header);
+    background-color: var(--danger);
+}
+
+.settings-divider {
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.06);
+    margin: 8px 10px;
+}
+
+.settings-main {
+    width: 65%;
+    background-color: var(--bg-chat);
+    display: flex;
+    position: relative;
+    padding: 60px 40px;
+}
+
+.settings-main-inner {
+    max-width: 740px;
+    width: 100%;
+}
+
+.settings-main-inner h2 {
+    color: var(--text-header);
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.account-card {
+    background-color: var(--bg-user-panel);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.account-card-header {
+    height: 100px;
+    background-color: #A5C0F3;
+}
+
+.account-card-body {
+    padding: 16px;
+    position: relative;
+}
+
+.account-card-avatar {
+    position: absolute;
+    top: -50px;
+    left: 16px;
+    border: 6px solid var(--bg-user-panel);
+}
+
+.account-card-avatar.online::after {
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-width: 4px;
+}
+
+.account-info {
+    margin-top: 40px;
+}
+
+.account-info h3 {
+    font-size: 20px;
+    color: var(--text-header);
+    margin-bottom: 24px;
+}
+
+.account-field {
+    background-color: var(--bg-chat);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.account-field h4 {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.account-field p {
+    color: var(--text-normal);
+    font-size: 16px;
+}
+
+.discord-btn {
+    background-color: var(--brand);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 32px;
+}
+
+.discord-btn:hover {
+    background-color: var(--brand-hover);
+}
+
+.discord-btn.secondary {
+    background-color: #4E5058;
+}
+
+.discord-btn.secondary:hover {
+    background-color: #6D6F78;
+}
+
+.settings-close {
+    position: absolute;
+    top: 60px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.settings-close:hover {
+    color: var(--text-normal);
+}
+
+.close-btn-circle {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.settings-close:hover .close-btn-circle {
+    border-color: var(--text-normal);
+}
+
+/* ---------------- App Layout ---------------- */
+.app-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* 1. Server Sidebar */
+.server-nav {
+    width: 72px;
+    background-color: var(--bg-servers);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 12px;
+    flex-shrink: 0;
+}
+
+.server-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #313338;
+    border-radius: 50%;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-normal);
+    cursor: pointer;
+    transition: border-radius 0.2s, background-color 0.2s, color 0.2s;
+    position: relative;
+}
+
+.server-icon:hover,
+.server-icon.active {
+    border-radius: 16px;
+    background-color: var(--brand);
+    color: white;
+}
+
+.server-icon.dm-icon {
+    background-color: var(--bg-chat);
+}
+
+.server-icon.dm-icon:hover,
+.server-icon.dm-icon.active {
+    background-color: var(--brand);
+}
+
+.sidebar-separator {
+    width: 32px;
+    height: 2px;
+    background-color: #35363C;
+    margin-bottom: 8px;
+}
+
+/* 2. Channel Sidebar */
+.channel-sidebar {
+    width: 240px;
+    background-color: var(--bg-channels);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-header {
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.sidebar-header.search-header {
+    cursor: default;
+    justify-content: center;
+}
+
+.find-btn {
+    width: 100%;
+    background-color: var(--bg-servers);
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 8px;
+    border-radius: 4px;
+    text-align: left;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.find-btn:hover {
+    background-color: #1A1B1E;
+}
+
+.sidebar-header:not(.search-header):hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.sidebar-scroller {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 8px;
+}
+
+.server-dropdown {
+    position: absolute;
+    top: 54px;
+    left: 10px;
+    width: 220px;
+    background-color: #111214;
+    border-radius: 4px;
+    padding: 6px 8px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
+    z-index: 100;
+}
+
+.dropdown-item {
+    padding: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-normal);
+    cursor: pointer;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dropdown-item:hover {
+    background-color: var(--brand);
+    color: white;
+}
+
+.dropdown-item.danger {
+    color: var(--text-danger);
+}
+
+.dropdown-item.danger:hover {
+    background-color: var(--danger);
+    color: white;
+}
+
+.channel-category {
+    padding: 8px 8px 4px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.channel-category:hover {
+    color: var(--text-normal);
+}
+
+.add-channel-btn {
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.add-channel-btn:hover {
+    color: var(--text-normal);
+    background-color: var(--bg-modifier-hover);
+}
+
+
+.channel-item {
+    padding: 6px 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    color: var(--text-channels);
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.channel-item:hover {
+    background-color: var(--bg-modifier-hover);
+    color: var(--text-normal);
+}
+
+.channel-item.active {
+    background-color: var(--bg-modifier-selected);
+    color: var(--text-header);
+}
+
+.channel-item .hash {
+    margin-right: 6px;
+    opacity: 0.6;
+}
+
+.dm-item {
+    padding: 8px;
+}
+
+.dm-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.user-panel {
+    height: 52px;
+    background-color: var(--bg-user-panel);
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    flex: 1;
+    max-width: 150px;
+}
+
+.user-info:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #5865F2;
+    margin-right: 8px;
+    position: relative;
+    flex-shrink: 0;
+    background-image: url('logo.png');
+    background-size: cover;
+}
+
+.avatar.online::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--success);
+    border: 3px solid var(--bg-user-panel);
+    border-radius: 50%;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    overflow: hidden;
+}
+
+.username {
+    font-weight: 600;
+    color: var(--text-header);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-id {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.user-controls {
+    display: flex;
+    gap: 4px;
+}
+
+.user-controls svg {
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-normal);
+}
+
+.user-controls svg:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+/* 3. Chat Area */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-chat);
+}
+
+.chat-header {
+    height: 48px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-header h3 {
+    font-size: 16px;
+    color: var(--text-header);
+}
+
+.message-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.message-welcome {
+    margin: 20px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 16px;
+    padding: 2px 0;
+}
+
+.message:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 16px;
+    background-color: var(--brand);
+    background-image: url('https://cdn.discordapp.com/embed/avatars/0.png');
+    background-size: cover;
+    flex-shrink: 0;
+}
+
+.message-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.msg-username {
+    font-weight: 600;
+    color: var(--text-header);
+}
+
+.msg-timestamp {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.message-text {
+    line-height: 1.375rem;
+    color: var(--text-normal);
+}
+
+.message-input-area {
+    padding: 0 16px 24px 16px;
+}
+
+.input-wrapper {
+    background-color: var(--bg-input);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    height: 44px;
+}
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-normal);
+    font-size: 16px;
+    padding: 0 8px;
+}
+
+.input-wrapper input:focus {
+    outline: none;
+}
+
+.attach-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.attach-btn:hover {
+    color: var(--text-normal);
+}
+
+/* 4. Member Sidebar */
+.member-sidebar {
+    width: 240px;
+    background-color: var(--bg-members);
+    padding: 24px 8px;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.member-group {
+    padding: 0 8px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.member-item {
+    padding: 6px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.member-item:hover {
+    background-color: var(--bg-modifier-hover);
+}
+
+.member-item .avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+}
+
+.member-name {
+    font-weight: 500;
+    color: var(--text-channels);
+}
+
+.member-item:hover .member-name {
+    color: var(--text-normal);
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-servers);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1a1b1e;
+    border-radius: 4px;
+}
+
+.sidebar-scroller::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.message-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ---------------- Modals ---------------- */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal-box {
+    background-color: var(--bg-chat);
+    width: 100%;
+    max-width: 440px;
+    border-radius: 4px;
+    padding: 24px;
+    box-shadow: 0 0 0 1px rgba(32, 34, 37, 0.6), 0 2px 10px 0 rgba(0, 0, 0, 0.2);
+}
+
+.server-options-tabs {
+    display: flex;
+    background-color: var(--bg-input);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tab-btn:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-normal);
+}
+
+.tab-btn.active {
+    background-color: var(--bg-modifier-selected);
+    color: var(--text-header);
+}
+
+.invite-code-pill {
+    background-color: var(--bg-servers);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-normal);
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+}
+
+.invite-code-pill:hover {
+    background-color: #1A1B1E;
+}
+    </style>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
